@@ -1,0 +1,89 @@
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+
+html {
+  background: var(--color-ivory);
+  color: var(--color-char);
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--nav-h);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  overflow-x: clip; /* oversized art never causes sideways scroll */
+}
+
+::selection {
+  background: var(--color-blood);
+  color: var(--color-ivory);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-blood);
+  outline-offset: 3px;
+}
+
+[data-surface='dark'] :focus-visible,
+[data-surface='red'] :focus-visible {
+  outline-color: var(--color-ivory);
+}
+
+img,
+svg {
+  display: block;
+}
+
+/* Custom cursor: hide the native one only once JS has mounted the replacement */
+html.has-ink-cursor,
+html.has-ink-cursor * {
+  cursor: none !important;
+}
+
+.skip-link {
+  position: fixed;
+  left: var(--gutter);
+  top: -100px;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  background: var(--color-char);
+  color: var(--color-ivory);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.skip-link:focus {
+  top: 12px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

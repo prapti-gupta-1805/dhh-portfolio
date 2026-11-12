@@ -1,0 +1,58 @@
+/* ==========================================================================
+   TEXTURES — static SVG noise rasterised once by the browser. No animated
+   overlays, no fixed full-screen layers: cheap to scroll.
+   ========================================================================== */
+
+:root {
+  /* fine grain: dark specks */
+  --tex-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .09 0 0 0 0 .07 0 0 0 0 .06 .9 0 0 0 -.42'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* paper mottling: soft low-frequency blotches */
+  --tex-mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .33 0 0 0 0 .2 .3 0 0 0 -.11'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
+  /* erosion mask for photocopied type: opaque except for small speckle holes */
+  --tex-erode: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='e'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='2' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -34 0 0 0 25.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23e)'/%3E%3C/svg%3E");
+}
+
+/* Paper surface: ivory + mottling + grain */
+.paper {
+  background-color: var(--color-ivory);
+  background-image: var(--tex-grain), var(--tex-mottle);
+  background-size: 220px 220px, 600px 600px;
+}
+.paper-aged {
+  background-color: var(--color-paper);
+  background-image: var(--tex-grain), var(--tex-mottle);
+  background-size: 220px 220px, 600px 600px;
+}
+.surface-dark {
+  --ink-ground: var(--color-char);
+  background-color: var(--color-char);
+  background-image: var(--tex-grain);
+  background-size: 220px 220px;
+  color: var(--color-ivory);
+}
+
+/* Halftone dot field that fades out — screen-print shading */
+.halftone {
+  background-image: radial-gradient(circle, currentColor 0.9px, transparent 1.4px);
+  background-size: 7px 7px;
+  -webkit-mask-image: linear-gradient(135deg, #000 0%, transparent 70%);
+  mask-image: linear-gradient(135deg, #000 0%, transparent 70%);
+}
+
+/* Screen-print misregistration: a second ink pass that slipped */
+.misregister {
+  text-shadow: 0.022em 0.016em 0 rgb(143 20 37 / 0.22);
+}
+
+/* Photocopy erosion on display type */
+.ink-erode {
+  -webkit-mask-image: var(--tex-erode);
+  mask-image: var(--tex-erode);
+  -webkit-mask-size: 260px 260px;
+  mask-size: 260px 260px;
+}
+
+/* Rough-edged SVG ink (used on small elements only: stamp, scribbles) */
+.ink-rough {
+  filter: url(#ink-rough);
+}

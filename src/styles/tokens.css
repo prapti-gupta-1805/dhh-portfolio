@@ -1,0 +1,70 @@
+/* ==========================================================================
+   DESIGN TOKENS — red ink on paper.
+   Tailwind v4 reads @theme and generates utilities (bg-blood, text-ivory, font-display …).
+   ========================================================================== */
+
+@theme {
+  /* — Ink & paper — */
+  --color-blood: #c51f32; /* signature: stamp / tattoo red. AA on ivory (≈5:1) */
+  --color-crimson: #8f1425; /* deep ink, shadows, misregistration */
+  --color-tattoo: #e12636; /* bright red — on charcoal, large type only */
+  --color-ivory: #f1e9dc; /* warm paper / skin */
+  --color-paper: #d9ccba; /* aged paper */
+  --color-char: #171615; /* charcoal */
+  --color-ash: #8d8780; /* faded grey — on charcoal only */
+  --color-ash-ink: #5f5953; /* muted text on ivory (AA) */
+
+  /* — Type — */
+  --font-display: 'Anton', 'Impact', 'Haettenschweiler', 'Arial Narrow Bold', sans-serif;
+  --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --font-marker: 'Permanent Marker', 'Segoe Print', 'Bradley Hand', cursive;
+  --font-deva: 'Yatra One', 'Nirmala UI', 'Kohinoor Devanagari', serif;
+
+  /* — Motion — */
+  --ease-ink: cubic-bezier(0.22, 1, 0.36, 1); /* fast out, long settle — like ink soaking in */
+  --ease-press: cubic-bezier(0.3, 0, 0.2, 1);
+
+  /* — Breakpoints (Tailwind defaults, restated for reference) — */
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
+}
+
+:root {
+  /* Fluid type scale */
+  --fs-name: clamp(5.4rem, 17.5vw, 21rem); /* PRAPTI / GUPTA */
+  --fs-display-l: clamp(3.2rem, 8.4vw, 9.5rem); /* headline */
+  --fs-display-m: clamp(2.2rem, 4.6vw, 4.8rem);
+  --fs-body: 1rem;
+  --fs-lead: clamp(1.02rem, 0.4vw + 0.92rem, 1.2rem);
+  --fs-mono: 0.72rem;
+  --fs-marker: clamp(1rem, 1.2vw, 1.35rem);
+
+  /* Spacing — 4px base, plus fluid gutters */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+  --gutter: clamp(16px, 4vw, 64px);
+  --nav-h: 60px;
+
+  /* Rules */
+  --rule: 1.5px solid var(--color-char);
+  --rule-ink: 1.5px solid var(--color-blood);
+  --shadow-hard: 5px 5px 0 var(--color-char);
+
+  /* Motion durations */
+  --dur-micro: 200ms;
+  --dur-reveal: 800ms;
+
+  /* Surface the artwork "paints" its body with, so art occludes correctly on any section */
+  --ink-ground: var(--color-ivory);
+}
