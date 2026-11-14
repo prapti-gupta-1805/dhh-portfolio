@@ -119,6 +119,8 @@ export function MobileMenu({ open, onClose, returnFocus, active }: Props) {
                 [
                   ['GitHub', site.links.github],
                   ['LinkedIn', site.links.linkedin],
+                  ['LeetCode', site.links.leetcode],
+                  ['Instagram', site.links.instagram],
                 ] as const
               ).map(([label, href]) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="group label-mono flex items-center gap-2 py-2 text-[0.8rem]">
@@ -126,6 +128,9 @@ export function MobileMenu({ open, onClose, returnFocus, active }: Props) {
                   <span className="sr-only">(opens in a new tab)</span>
                 </a>
               ))}
+              <a href={`mailto:${site.links.email}`} className="group label-mono flex items-center gap-2 py-2 text-[0.8rem] normal-case">
+                {site.links.email} <ArrowSwap diag />
+              </a>
             </div>
             <p className="label-mono text-right text-ivory/80">
               {site.location.label}

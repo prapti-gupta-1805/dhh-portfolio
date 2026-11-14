@@ -40,7 +40,7 @@ export function HeroTitle() {
       <span className="block leading-[0.8]">
         <Letters word={site.name.first} delay={0.15} />
       </span>
-      <span className="relative ml-[13vw] inline-block leading-[0.8] lg:ml-[19vw]">
+      <span className="relative ml-[13vw] inline-block leading-[0.8] lg:ml-[10.5vw]">
         <Letters word={site.name.last} delay={0.35} />
         <span className="absolute left-[calc(100%+0.6rem)] top-[38%] hidden sm:block">
           <Annotation show={hover || !fine} text="that's me. hi." arrow="left" rotate={-6} />

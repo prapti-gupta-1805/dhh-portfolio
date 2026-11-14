@@ -12,11 +12,8 @@ import { ScrollCue } from './ScrollCue';
 import { Stamp } from './Stamp';
 import { Star } from '../Nav';
 
-/** Body ranges (0 = head, 1 = tail) that pass IN FRONT of the name. */
-const OVER: readonly (readonly [number, number])[] = [
-  [0.385, 0.47],
-  [0.0, 0.035],
-];
+/** Body ranges (0 = head, 1 = tail) that pass IN FRONT of the name. Empty: the name stays fully readable. */
+const OVER: readonly (readonly [number, number])[] = [];
 
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
@@ -62,12 +59,12 @@ export function Hero() {
     >
       {/* ── Layer 0: dragon (under the type) ─────────────────────────── */}
       <motion.div className={`${artFrame} z-0 text-blood`} style={{ y: py, rotate: pr }} aria-hidden="true">
-        <motion.div className="h-full w-full" style={{ x: sx, y: sy }}>
+        <motion.div className="h-full w-full will-change-transform" style={{ x: sx, y: sy }}>
           <div className="ink-bloom h-full w-full">
             <Dragon
               layer={desktop ? 'under' : 'all'}
               overRanges={OVER}
-              withHead={!desktop}
+              withHead
               preserveAspectRatio={aspect}
               className={`h-full w-full `}
             />
@@ -106,12 +103,13 @@ export function Hero() {
       {/* ── Layer 2: dragon coils that pass IN FRONT of the name ──────── */}
       {desktop && (
         <motion.div className={`${artFrame} pointer-events-none z-20 text-blood`} style={{ y: py, rotate: pr }} aria-hidden="true">
-          <motion.div className="h-full w-full" style={{ x: sx, y: sy }}>
+          <motion.div className="h-full w-full will-change-transform" style={{ x: sx, y: sy }}>
             <div className="ink-bloom h-full w-full">
               <Dragon
                 layer="over"
                 overRanges={OVER}
                 withHead
+                headHitOnly
                 preserveAspectRatio={aspect}
                 className="h-full w-full"
                 onHeadEnter={() => setHeadHover(true)}

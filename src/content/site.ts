@@ -15,9 +15,11 @@ export const site = {
   location: { label: 'Delhi, India', short: 'DEL', coords: '28.61°N 77.21°E', tz: 'Asia/Kolkata' },
   education: { school: 'USICT, GGSIPU', degree: 'B.Tech CSE (AI)', year: '3rd year' },
   links: {
-    github: 'https://github.com/TODO',
-    linkedin: 'https://www.linkedin.com/in/TODO',
-    email: 'TODO@example.com',
+    github: 'https://github.com/prapti-gupta-1805',
+    linkedin: 'https://www.linkedin.com/in/prapti-gupta/',
+    leetcode: 'https://leetcode.com/u/prapti18056/',
+    instagram: 'https://www.instagram.com/prapti._.gupta/',
+    email: 'prapti18056@gmail.com',
     resume: '/resume.pdf', // TODO: drop the PDF into /public
   },
   volume: 'VOL. 01 — PORTFOLIO — 2026',

@@ -11,6 +11,8 @@ type Props = {
   overRanges?: readonly Range[];
   /** whether the head belongs to this layer */
   withHead?: boolean;
+  /** draw the head invisibly: a hover target only (the visible head lives in another layer) */
+  headHitOnly?: boolean;
   preserveAspectRatio?: string;
   className?: string;
   children?: ReactNode;
@@ -26,6 +28,7 @@ export const Dragon = memo(function Dragon({
   layer,
   overRanges = [],
   withHead = layer !== 'under',
+  headHitOnly = false,
   preserveAspectRatio = 'xMidYMid slice',
   className,
   children,
@@ -56,7 +59,7 @@ export const Dragon = memo(function Dragon({
       {withHead && (
         <g
           transform={heroDragon.head.transform}
-          style={onHeadEnter ? { pointerEvents: 'visiblePainted' } : undefined}
+          style={{ ...(onHeadEnter ? { pointerEvents: 'visiblePainted' as const } : {}), ...(headHitOnly ? { opacity: 0 } : {}) }}
           data-cursor="dragon"
           onPointerEnter={onHeadEnter}
           onPointerLeave={onHeadLeave}

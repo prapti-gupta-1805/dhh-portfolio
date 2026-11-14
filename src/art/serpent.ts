@@ -279,108 +279,156 @@ export function serpent(spec: SerpentSpec): SerpentArt {
 
 const Q = (x: number, y: number) => P(x, y);
 
+/** Fine-precision formatting for head-local units (the head is scaled ~70×, so 0.1 rounding = 7px jaggies). */
+const f3 = (n: number) => String(Math.round(n * 1000) / 1000);
+const hp = (p: Pt) => `${f3(p.x)} ${f3(p.y)}`;
+const hsmooth = (ps: Pt[]) => {
+  let d = `M${hp(ps[0])}`;
+  for (let i = 1; i < ps.length - 1; i++) d += `Q${hp(ps[i])} ${hp(lerp(ps[i], ps[i + 1], 0.5))}`;
+  return d + `L${hp(ps[ps.length - 1])}`;
+};
+
+/** A tapered, S-bent flame lock from a base centre to a tip. */
+function flame(base: Pt, tip: Pt, wid: number, bend: number): string {
+  const d = sub(tip, base);
+  const L = Math.hypot(d.x, d.y);
+  const pn = perp(norm(d));
+  const b1 = add(base, mul(pn, wid));
+  const b2 = add(base, mul(pn, -wid));
+  const k1 = add(lerp(base, tip, 0.35), mul(pn, bend * L + wid * 0.6));
+  const k2 = add(lerp(base, tip, 0.7), mul(pn, -bend * L * 0.55));
+  const k3 = add(lerp(base, tip, 0.72), mul(pn, -bend * L * 0.55 - wid * 0.35));
+  const k4 = add(lerp(base, tip, 0.38), mul(pn, bend * L - wid * 0.6));
+  return `M${hp(b1)}C${hp(k1)} ${hp(k2)} ${hp(tip)}C${hp(k3)} ${hp(k4)} ${hp(b2)}Z`;
+}
+/** The centre vein of a flame lock (a paper "cut" that gives the tattoo its carved look). */
+function vein(base: Pt, tip: Pt, bend: number): string {
+  const d = sub(tip, base);
+  const L = Math.hypot(d.x, d.y);
+  const pn = perp(norm(d));
+  const a = lerp(base, tip, 0.12);
+  const b = lerp(base, tip, 0.72);
+  return `M${hp(a)}C${hp(add(lerp(base, tip, 0.35), mul(pn, bend * L * 0.9)))} ${hp(add(lerp(base, tip, 0.6), mul(pn, -bend * L * 0.3)))} ${hp(b)}`;
+}
+
 function dragonHead(r: () => number): Item[] {
   const it: Item[] = [];
   const ink = (d: string) => it.push({ k: 'ink', d });
   const paper = (d: string) => it.push({ k: 'paper', d });
   const line = (d: string, w = 0.04) => it.push({ k: 'line', d, w });
   const cut = (d: string, w = 0.03) => it.push({ k: 'cut', d, w });
+  const lock = (base: Pt, tip: Pt, wid: number, bend: number) => {
+    ink(flame(base, tip, wid, bend));
+    cut(vein(base, tip, bend), 0.028);
+  };
 
-  // flame mane (behind skull)
-  const mane: [number, number, number, number, number, number, number][] = [
-    [0.9, -0.95, 1.5, -1.05, -0.9, -2.1, 0.25],
-    [0.4, -0.75, 1.0, -0.95, -1.5, -1.5, 0.2],
-    [0.05, -0.45, 0.5, -0.7, -1.9, -0.75, -0.15],
-    [-0.1, 0.0, 0.3, -0.3, -1.7, 0.15, 0.18],
-    [0.1, 0.45, 0.6, 0.6, -1.3, 1.25, -0.22],
-    [1.5, 1.15, 2.2, 1.35, 0.7, 2.5, 0.25],
-    [2.2, 1.35, 2.85, 1.45, 2.1, 2.85, -0.22],
-    [0.9, 0.85, 1.6, 1.05, -0.2, 2.0, 0.2],
+  // ── mane: flowing locks swept back off the skull (drawn first, sits behind) ──
+  const mane: [number, number, number, number, number, number][] = [
+    // baseX, baseY, tipX, tipY, width, bend
+    [0.7, -0.75, -1.9, -2.05, 0.22, 0.22],
+    [0.45, -0.55, -2.45, -1.25, 0.24, -0.18],
+    [0.25, -0.25, -2.6, -0.35, 0.24, 0.2],
+    [0.2, 0.1, -2.4, 0.6, 0.22, -0.2],
+    [0.3, 0.4, -1.95, 1.35, 0.2, 0.2],
+    [0.6, 0.6, -1.1, 1.95, 0.18, -0.2],
+    [0.95, -0.9, -1.0, -2.5, 0.16, -0.2],
   ];
-  for (const [ax, ay, bx, by, tx, ty, bend] of mane) {
-    const a = Q(ax, ay);
-    const b = Q(bx, by);
-    const tip = Q(tx, ty);
-    ink(tongue(a, b, tip, bend));
-    const m = lerp(a, b, 0.5);
-    cut(`M${pt(lerp(m, tip, 0.12))}Q${pt(add(lerp(m, tip, 0.45), mul(perp(norm(sub(tip, m))), bend * 0.4)))} ${pt(lerp(m, tip, 0.78))}`, 0.03);
-  }
+  for (const [bx, by, tx, ty, wd, bd] of mane) lock(Q(bx, by), Q(tx, ty), wd, bd);
 
-  // horns (two, far one first)
+  // cheek frills (behind the skull so their bases tuck under the jowl)
+  lock(Q(1.0, 0.5), Q(-0.9, 1.45), 0.18, 0.18);
+  lock(Q(0.9, 0.15), Q(-1.25, 0.66), 0.19, -0.18);
+  lock(Q(0.9, -0.25), Q(-1.2, -0.1), 0.18, 0.18);
+
+  // ── horns: two antlers sweeping back, far one first ──
   const horn = (o: Pt, k: number) => {
-    const p = (x: number, y: number) => `${pt(add(o, Q(x * k, y * k)))}`;
-    ink(`M${p(0.0, 0.1)}C${p(-0.6, -0.5)} ${p(-1.4, -0.7)} ${p(-2.5, -1.55)}C${p(-1.6, -1.05)} ${p(-0.8, -0.65)} ${p(0.45, -0.12)}Z`);
+    const p = (x: number, y: number) => hp(add(o, Q(x * k, y * k)));
+    const beam = `M${p(0.12, 0.05)}C${p(-0.5, -0.35)} ${p(-1.3, -0.55)} ${p(-1.95, -1.15)}C${p(-2.2, -1.38)} ${p(-2.3, -1.65)} ${p(-2.2, -1.9)}C${p(-2.05, -1.55)} ${p(-1.82, -1.32)} ${p(-1.5, -1.0)}C${p(-0.95, -0.5)} ${p(-0.3, -0.2)} ${p(0.38, -0.08)}Z`;
+    const prong = `M${p(-0.95, -0.55)}C${p(-1.05, -0.85)} ${p(-1.0, -1.15)} ${p(-0.78, -1.4)}C${p(-0.82, -1.1)} ${p(-0.72, -0.85)} ${p(-0.62, -0.62)}Z`;
+    paper(prong);
+    line(prong, 0.035);
+    paper(beam);
+    line(beam, 0.04);
     for (let q = 1; q < 7; q++) {
       const t = q / 7;
-      const c = add(o, Q((-2.4 * t + 0.2) * k, (-1.4 * t * t - 0.05) * k));
-      cut(`M${pt(add(c, Q(-0.06 * k, -0.12 * k)))}L${pt(add(c, Q(0.06 * k, 0.1 * k)))}`, 0.022);
+      const c = add(o, Q((-1.95 * t + 0.1) * k, (-1.1 * t * t - 0.05 * t) * k));
+      line(`M${hp(add(c, Q(-0.05 * k, -0.1 * k)))}L${hp(add(c, Q(0.05 * k, 0.06 * k)))}`, 0.02);
     }
   };
-  horn(Q(1.25, -1.0), 0.9);
-  horn(Q(0.85, -0.85), 1.05);
+  horn(Q(1.6, -1.0), 1.1);
+  horn(Q(1.2, -0.92), 1.28);
 
-  // skull + upper jaw
-  const skull = 'M0 -0.62C0.5 -1 1.2 -1.15 1.7 -1C2 -1.28 2.35 -1.22 2.55 -0.95C2.95 -0.86 3.35 -0.86 3.65 -0.7C4 -0.6 4.12 -0.35 3.98 -0.12C3.9 0.04 3.72 0.1 3.5 0.06L1.35 0.16C1 0.3 0.6 0.5 0 0.62Z';
-  paper(skull);
-  // mouth interior
-  ink('M1.3 0.12L3.52 0.04C3.42 0.52 3.22 0.9 3.02 1.16L1.3 0.32Z');
-  // upper fangs
+  // ── mouth interior, tongue, lower jaw ──
+  ink('M1.2 0.06C2.3 -0.04 3.2 -0.15 3.86 -0.24C3.8 0.25 3.6 0.65 3.35 0.98C2.7 0.76 1.9 0.52 1.22 0.36Z');
+  const tongueD = 'M1.6 0.22C2.6 0.2 3.5 0.25 4.0 0.4C4.3 0.5 4.42 0.75 4.34 0.98L4.24 0.82L4.1 0.99C4.18 0.76 4.1 0.6 3.9 0.52C3.4 0.37 2.5 0.34 1.6 0.33Z';
+  paper(tongueD);
+  line(tongueD, 0.03);
+  const jaw = 'M1.22 0.32C1.9 0.48 2.6 0.72 3.32 0.96C3.5 1.02 3.6 1.14 3.52 1.26C3.38 1.4 3.06 1.38 2.78 1.3C2.2 1.2 1.5 1.12 0.95 0.95C0.6 0.84 0.3 0.72 0.1 0.66Z';
+  paper(jaw);
   for (let q = 0; q < 7; q++) {
-    const x = 1.75 + q * 0.26;
-    const L = q === 6 ? 0.36 : 0.13 + (q % 2) * 0.05;
-    const y = 0.135 - (x - 1.35) * 0.042;
-    paper(`M${x - 0.07} ${y}L${x + 0.07} ${y - 0.005}L${x + 0.01} ${y + L}Z`);
+    const x = 1.7 + q * 0.25;
+    const y = 0.33 + (x - 1.25) * 0.304;
+    const L = q === 6 ? 0.34 : 0.1 + (q % 2) * 0.04;
+    paper(`M${f3(x - 0.06)} ${f3(y + 0.02)}L${f3(x + 0.06)} ${f3(y + 0.035)}L${f3(x + 0.02)} ${f3(y - L)}Z`);
   }
-  // lower jaw
-  paper('M1.25 0.3L3.02 1.16C3.18 1.26 3.14 1.46 2.94 1.48C2.2 1.34 1.4 1.06 0.5 0.62Z');
-  for (let q = 0; q < 5; q++) {
-    const t = 0.25 + q * 0.16;
-    const b = lerp(Q(1.3, 0.32), Q(3.0, 1.15), t);
-    const L = q === 4 ? 0.3 : 0.12;
-    paper(`M${pt(add(b, Q(-0.06, 0.03)))}L${pt(add(b, Q(0.07, 0.03)))}L${pt(add(b, Q(0.06, -L)))}Z`);
+  // chin beard
+  lock(Q(3.15, 1.3), Q(2.6, 2.2), 0.13, 0.16);
+  lock(Q(2.55, 1.18), Q(1.75, 1.95), 0.13, -0.16);
+  lock(Q(1.95, 1.0), Q(1.0, 1.6), 0.12, 0.16);
+  line(jaw, 0.045);
+  for (let q = 0; q < 7; q++) {
+    const t = 0.1 + q * 0.13;
+    const a = lerp(Q(1.2, 1.02), Q(2.9, 1.3), t);
+    line(`M${hp(a)}L${hp(add(a, Q(0.06, -0.13)))}`, 0.016);
   }
-  // tongue curling out
-  cut('M1.5 0.3C2.2 0.42 2.7 0.5 3.1 0.6', 0.09);
-  line('M3.08 0.58C3.45 0.65 3.7 0.55 3.9 0.75', 0.06);
-  line('M3.9 0.75L4.15 0.62M3.9 0.75L4.1 0.95', 0.04);
-  // outlines on top
+
+  // ── skull + upper jaw ──
+  const skull =
+    'M0.1 -0.68C0.6 -0.95 1.2 -1.12 1.75 -1.12C2.05 -1.12 2.3 -1.02 2.55 -0.92' +
+    'C2.9 -0.8 3.25 -0.84 3.55 -0.95C3.85 -1.05 4.15 -0.9 4.12 -0.62C4.1 -0.4 3.98 -0.3 3.85 -0.26' +
+    'C3.4 -0.18 2.6 -0.08 1.7 0.02C1.45 0.05 1.3 0.18 1.25 0.32C1.0 0.5 0.5 0.6 0.1 0.66';
+  paper(skull + 'C-0.3 0.4 -0.3 -0.4 0.1 -0.68Z');
+  for (let q = 0; q < 8; q++) {
+    const x = 1.85 + q * 0.24;
+    const y = -0.26 + (3.85 - x) * 0.13 - 0.01;
+    const big = q === 7;
+    const L = big ? 0.4 : 0.11 + (q % 2) * 0.05;
+    if (big) paper(`M${f3(x - 0.08)} ${f3(y)}L${f3(x + 0.08)} ${f3(y - 0.01)}Q${f3(x + 0.06)} ${f3(y + L * 0.6)} ${f3(x - 0.03)} ${f3(y + L)}Z`);
+    else paper(`M${f3(x - 0.06)} ${f3(y)}L${f3(x + 0.06)} ${f3(y - 0.005)}L${f3(x + 0.005)} ${f3(y + L)}Z`);
+  }
   line(skull, 0.05);
-  line('M1.25 0.3L3.02 1.16C3.18 1.26 3.14 1.46 2.94 1.48C2.2 1.34 1.4 1.06 0.5 0.62', 0.05);
-  // jaw hatching
-  for (let q = 0; q < 9; q++) {
-    const t = 0.1 + q * 0.09;
-    const a = lerp(Q(0.7, 0.68), Q(2.9, 1.42), t);
-    line(`M${pt(a)}L${pt(add(a, Q(0.08, -0.18)))}`, 0.018);
+
+
+  // cheek scales
+  for (let q = 0; q < 6; q++) {
+    const c = Q(1.5 + (q % 3) * 0.26 + (q > 2 ? 0.13 : 0), -0.42 + (q > 2 ? 0.2 : 0));
+    line(`M${hp(add(c, Q(0, -0.1)))}Q${hp(add(c, Q(-0.16, 0)))} ${hp(add(c, Q(0, 0.1)))}`, 0.02);
   }
-  // eye
-  const eye = 'M2.02 -0.72Q2.36 -0.98 2.7 -0.72Q2.36 -0.53 2.02 -0.72Z';
+
+  // ── eye with a heavy flame brow ──
+  const eye = 'M2.05 -0.72Q2.4 -0.95 2.8 -0.78Q2.45 -0.6 2.05 -0.72Z';
   paper(eye);
   line(eye, 0.035);
-  ink(circle(Q(2.4, -0.735), 0.085));
-  cut(`M2.38 -0.78L2.41 -0.77`, 0.025);
-  ink('M1.85 -0.9Q2.3 -1.32 3.05 -1.08Q2.45 -1.06 1.92 -0.8Z');
-  // brow wrinkles + snout ridge
-  line('M2.72 -0.86Q3.2 -0.8 3.62 -0.6', 0.025);
-  line('M2.85 -0.72Q3.25 -0.64 3.55 -0.48', 0.02);
-  line('M1.75 -0.6Q2.1 -0.45 2.6 -0.52', 0.02);
-  // nostril curl
-  line(smooth(Array.from({ length: 18 }, (_, i) => {
-    const a = (i / 17) * Math.PI * 2.2 + 1;
-    const rr = 0.13 * (1 - i / 22);
-    return Q(3.72 + Math.cos(a) * rr, -0.38 + Math.sin(a) * rr);
-  })), 0.03);
-  // cheek scales + hatching
-  for (let q = 0; q < 5; q++) {
-    const c = Q(0.55 + q * 0.22, -0.25 + (q % 2) * 0.22);
-    line(`M${pt(add(c, Q(0, -0.13)))}Q${pt(add(c, Q(-0.2, 0)))} ${pt(add(c, Q(0, 0.13)))}`, 0.022);
+  ink(circle(Q(2.47, -0.77), 0.085));
+  cut('M2.43 -0.81L2.45 -0.8', 0.03);
+  ink('M1.8 -0.82C2.15 -1.07 2.7 -1.08 3.02 -0.93C2.62 -0.97 2.22 -0.9 1.95 -0.72Z');
+  lock(Q(2.0, -0.95), Q(0.95, -1.5), 0.08, 0.12);
+  // under-eye + snout ridges
+  line('M2.1 -0.6Q2.45 -0.5 2.85 -0.62', 0.02);
+  line('M2.85 -0.82C3.1 -0.76 3.3 -0.78 3.5 -0.86', 0.022);
+  line('M2.95 -0.68C3.2 -0.62 3.42 -0.66 3.62 -0.74', 0.02);
+  // nostril
+  line('M3.98 -0.58C3.99 -0.72 3.82 -0.76 3.76 -0.65C3.72 -0.56 3.82 -0.5 3.89 -0.57', 0.035);
+  // lip line + hatching
+  line('M3.75 -0.32C3.2 -0.25 2.5 -0.15 1.85 -0.08', 0.02);
+  for (let q = 0; q < 6; q++) {
+    const x = 0.55 + q * 0.13 + r() * 0.03;
+    line(`M${f3(x)} -0.22L${f3(x - 0.08)} 0.08`, 0.016);
   }
-  for (let q = 0; q < 7; q++) {
-    const x = 1.05 + q * 0.12 + r() * 0.03;
-    line(`M${x} -0.25L${x - 0.1} 0.05`, 0.016);
-  }
-  // whiskers
-  line('M3.75 -0.05C4.7 0.25 4.75 1.45 3.75 1.95C2.9 2.35 2.7 3.0 3.35 3.45C3.7 3.7 3.6 4.05 3.3 4.1', 0.06);
-  line('M3.3 -0.72C3.95 -1.6 3.1 -2.45 2.25 -2.35C1.5 -2.25 1.25 -2.85 1.7 -3.25', 0.05);
+
+  // ── whiskers ──
+  line(hsmooth([Q(4.0, -0.42), Q(4.75, -0.2), Q(4.8, 0.6), Q(4.1, 1.2), Q(3.6, 1.9), Q(4.0, 2.6), Q(4.5, 2.7)]), 0.05);
+  line(hsmooth([Q(3.6, -0.92), Q(3.95, -1.6), Q(3.4, -2.2), Q(2.6, -2.25), Q(2.3, -2.7), Q(2.6, -3.1)]), 0.045);
   return it;
 }
 
